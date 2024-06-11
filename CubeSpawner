@@ -1,0 +1,80 @@
+using UnityEngine;
+using UnityEngine.Pool;
+
+public class CubeSpawner : MonoBehaviour
+{
+    [SerializeField] private Rigidbody _cubePrefab;
+    [SerializeField] private Transform _platformTransform;
+
+    [SerializeField] private float _spawnDelay = 0.2f;
+    [SerializeField] private int _initPoolSize = 50;
+
+    private ObjectPool<Rigidbody> _cubePool;
+
+    private void Start()
+    {
+        _cubePool = new ObjectPool<Rigidbody>(CreateCube, OnGetFromPool, OnReleaseToPool, OnDestroyPoolObject, false, _initPoolSize, _initPoolSize);
+
+        InvokeRepeating(nameof(SpawnCube), 0f, _spawnDelay);
+    }
+
+    private void OnDisable()
+    {
+        _cubePool.Clear();
+    }
+
+    private Rigidbody CreateCube()
+    {
+        float angleX = Random.rotation.eulerAngles.x;
+        float angleY = Random.rotation.eulerAngles.y;
+        float angleZ = Random.rotation.eulerAngles.z;
+
+        Rigidbody cube = Instantiate(_cubePrefab, GetRandomPosition(), Quaternion.EulerAngles(angleX, angleY, angleZ));
+
+        return cube;
+    }
+
+    private void OnGetFromPool(Rigidbody cube)
+    {
+        if (cube != null)
+        {
+            cube.gameObject.SetActive(true);
+        }
+    }
+
+    private void OnReleaseToPool(Rigidbody cube)
+    {
+        if (cube != null)
+        {
+            cube.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnDestroyPoolObject(Rigidbody cube)
+    {
+        if (cube != null)
+        {
+            Destroy(cube.gameObject);
+        }
+    }
+
+    private Vector3 GetRandomPosition()
+    {
+        Renderer platformRenderer = _platformTransform.GetComponent<Renderer>();
+        Bounds bounds = platformRenderer.bounds;
+
+        float offsetY = 5f;
+
+        float x = Random.Range(bounds.min.x, bounds.max.x);
+        float y = bounds.max.y - offsetY;
+        float z = Random.Range(bounds.min.z, bounds.max.z);
+
+        return new Vector3(x, y, z);
+    }
+
+    private void SpawnCube()
+    {
+        Rigidbody cube = _cubePool.Get();
+        cube.transform.SetParent(transform);
+    }
+}

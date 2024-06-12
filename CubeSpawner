@@ -25,11 +25,13 @@ public class CubeSpawner : MonoBehaviour
 
     private Rigidbody CreateCube()
     {
-        float angleX = Random.rotation.eulerAngles.x;
-        float angleY = Random.rotation.eulerAngles.y;
-        float angleZ = Random.rotation.eulerAngles.z;
+        float angleX = Random.Range(0f, 360f);
+        float angleY = Random.Range(0f, 360f);
+        float angleZ = Random.Range(0f, 360f);
 
-        Rigidbody cube = Instantiate(_cubePrefab, GetRandomPosition(), Quaternion.EulerAngles(angleX, angleY, angleZ));
+        Quaternion randomRotation = Quaternion.Euler(angleX, angleY, angleZ);
+
+        Rigidbody cube = Instantiate(_cubePrefab, GetRandomPosition(), randomRotation);
 
         return cube;
     }
@@ -54,7 +56,8 @@ public class CubeSpawner : MonoBehaviour
     {
         if (cube != null)
         {
-            Destroy(cube.gameObject);
+            cube.gameObject.SetActive(false);
+            _cubePool.Release(cube);
         }
     }
 

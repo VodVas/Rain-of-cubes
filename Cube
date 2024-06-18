@@ -1,0 +1,62 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Pool;
+
+[RequireComponent(typeof(Renderer))]
+
+public class Cube : MonoBehaviour
+{
+    private bool _hasCollided = false;
+
+    private ObjectPool<Cube> _pool;
+
+    private Renderer _renderer;
+
+    private void Awake()
+    {
+        _renderer = GetComponent<Renderer>();
+    }
+
+    private void OnEnable()
+    {
+        _hasCollided = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (_hasCollided == false && collision.gameObject.TryGetComponent(out Platform _))
+        {
+            _hasCollided = true;
+            SetRandomColor();
+            StartCoroutine(Die());
+        }
+    }
+
+    public void Init(ObjectPool<Cube> pool)
+    {
+        _pool = pool;
+    }
+
+    private IEnumerator Die()
+    {
+        float minLifeTimeValue = 2f;
+        float maxLifeTimeValue = 5f;
+
+        float lifeTime = Random.Range(minLifeTimeValue, maxLifeTimeValue + 1);
+
+        var wait = new WaitForSeconds(lifeTime);
+
+        yield return wait;
+
+        _pool.Release(this);
+    }
+
+    private void SetRandomColor()
+    {
+        float maxValue = 1f;
+
+        _renderer.material.color = Random.ColorHSV();
+        _renderer.material.SetFloat("Metallic", maxValue);
+        _renderer.material.SetFloat("_Smoothness", maxValue);
+    }
+}
